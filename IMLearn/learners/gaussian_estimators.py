@@ -7,6 +7,10 @@ class UnivariateGaussian:
     """
     Class for univariate Gaussian Distribution Estimator
     """
+    mu_ = 0
+    var_ = 0
+    fitted_ = ""
+
     def __init__(self, biased_var: bool = False) -> UnivariateGaussian:
         """
         Estimator for univariate Gaussian mean and variance parameters
@@ -51,10 +55,20 @@ class UnivariateGaussian:
         Sets `self.mu_`, `self.var_` attributes according to calculated estimation (where
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
-
+        self.mu_ = np.mean(X)
+        cur_sum = 0
+        for i in range(len(X)):
+            cur_sum += (X[i] - self.mu_) ** 2
+        self.var_ = (1 / (len(X) - 1)) * cur_sum
         self.fitted_ = True
         return self
+
+    def __single_sample_pdf(self, x: float) -> float:
+        const = 1 / np.sqrt(2 * np.pi * self.var_)
+        # the const which is 1/sqrt(2*pi*var)
+        exp_pow = (-1 / (2 * self.var_)) * (
+                (x - self.mu_) ** 2)  # exp pow in pdf.
+        return const * np.exp(exp_pow)  # combine and return
 
     def pdf(self, X: np.ndarray) -> np.ndarray:
         """
@@ -75,13 +89,23 @@ class UnivariateGaussian:
         ValueError: In case function was called prior fitting the model
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `pdf` function")
-        raise NotImplementedError()
+            raise ValueError("Estimator must first be fitted before calling"
+                             " `pdf` function")
+
+        ret_val = np.ndarray(shape=(len(X),))
+        for i in range(len(X)):
+            ret_val[i] = self.__single_sample_pdf(X[i])
+        return ret_val
 
     @staticmethod
     def log_likelihood(mu: float, sigma: float, X: np.ndarray) -> float:
         """
         Calculate the log-likelihood of the data under a specified Gaussian model
+        assumption was add that the X samples are iid - as seen in the lecture.
+
+        after simplification we will get the following formula which will get
+        calculated
+            -m/2*log(2*pi*sigma)-1/(2*sigma)*SUM((x_i - mu)^2)
 
         Parameters
         ----------
@@ -97,13 +121,25 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        raise NotImplementedError()
+
+        exp_val = 0
+        n = X.shape[0]
+        for i in range(n):
+            exp_val += pow((X[i] - mu), 2)
+        exp_val = (1 / (2 * sigma)) * exp_val
+        # here we calculate the second element.
+        first_val = (-n / 2) * np.log(2 * np.pi * sigma)
+        return first_val - exp_val
 
 
 class MultivariateGaussian:
     """
     Class for multivariate Gaussian Distribution Estimator
     """
+    mu_ = ""
+    cov_ = ""
+    fitted_ = ""
+
     def __init__(self):
         """
         Initialize an instance of multivariate Gaussian estimator
@@ -143,12 +179,40 @@ class MultivariateGaussian:
         Sets `self.mu_`, `self.cov_` attributes according to calculated estimation.
         Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
-
+        n_samples, n_features = X.shape
+        self.mu_ = np.ndarray(shape=(n_features,))
+        for i in range(n_features):
+            cur_col = X[:, i]
+            self.mu_[i] = np.mean(cur_col)
+            # mean each col in the sample matrix
+        mu_mat = np.ndarray(shape=(n_samples, n_features))
+        # creates mu matrix so we could centered X
+        for i in range(n_features):
+            mu_mat[:, i] = self.mu_.reshape((n_features,))
+        centered_X = np.subtract(X, mu_mat)
+        # use the formula we saw in the book 1/m-1*X~^T*X~
+        self.cov_ = np.multiply(
+            np.matmul(np.transpose(centered_X), centered_X),
+            (1 / (n_samples - 1)))
         self.fitted_ = True
         return self
 
-    def pdf(self, X: np.ndarray):
+    def __calculate_pdf_for_single_sample(self, x: np.ndarray) -> float:
+        """
+        Helper method to calculate the pdf for a single features vector.
+
+        @param: x, np.ndarray of shape (n_features,)
+
+        """
+        cov_det = np.linalg.det(self.cov_)  # get det
+        centered_vec = np.subtract(x, self.mu_)
+        const = 1 / np.sqrt(((2 * np.pi) ** x.shape[0]) * cov_det)
+        left_mal_calc = np.matmul(np.transpose(centered_vec),
+                                  np.linalg.inv(self.cov_))
+        exp_pow = np.multiply(np.matmul(left_mal_calc, centered_vec), -1 / 2)
+        return const * np.exp(exp_pow)
+
+    def pdf(self, X: np.ndarray) -> np.ndarray:
         """
         Calculate PDF of observations under Gaussian model with fitted estimators
 
@@ -167,13 +231,22 @@ class MultivariateGaussian:
         ValueError: In case function was called prior fitting the model
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `pdf` function")
-        raise NotImplementedError()
+            raise ValueError(
+                "Estimator must first be fitted before calling `pdf` function")
+        ret_val = np.ndarray(shape=(X.shape[0],))
+        for j in range(X.shape[0]):
+            # calc outside then assign the value back
+            ret_val[j] = self.__calculate_pdf_for_single_sample(X[j])
+        return ret_val
 
     @staticmethod
-    def log_likelihood(mu: np.ndarray, cov: np.ndarray, X: np.ndarray) -> float:
+    def log_likelihood(mu: np.ndarray, cov: np.ndarray,
+                       X: np.ndarray) -> float:
         """
         Calculate the log-likelihood of the data under a specified Gaussian model
+
+        using the formula that was achieved in the theoretical part which is
+         -1/2(m*d*log(2PI)+log(|SIGMA|) + SUM((x_i-mu)^T *SIGMA^-1 * (x_i-mu)))
 
         Parameters
         ----------
@@ -187,6 +260,24 @@ class MultivariateGaussian:
         Returns
         -------
         log_likelihood: float
-            log-likelihood calculated over all input data and under given parameters of Gaussian
+            log-likelihood calculated over all input data and under
+            given parameters of Gaussian
         """
-        raise NotImplementedError()
+        cov_inv = np.linalg.inv(cov)
+        cov_det = np.linalg.det(cov)
+        n, d = X.shape
+        sum_for_vec = 0
+        for j in range(n):
+            centered_vec = np.subtract(X[j], mu)
+            # matrix multiplication to get the scalar and sum it.
+            left = np.matmul(np.transpose(centered_vec), cov_inv)
+            sum_for_vec += np.matmul(left, centered_vec)
+        # calc the log sum as seen in the formula.
+        log_sum = n * d * np.log(2 * np.pi) + np.log(cov_det)
+        return (-1 / 2) * (log_sum + sum_for_vec) # add everything and return
+
+
+if __name__ == '__main__':
+    random_samples = np.random.normal(10, 1, 1000)
+    uni_gaussian = UnivariateGaussian()
+    uni_gaussian.fit(random_samples)
