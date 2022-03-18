@@ -185,10 +185,9 @@ class MultivariateGaussian:
             cur_col = X[:, i]
             self.mu_[i] = np.mean(cur_col)
             # mean each col in the sample matrix
-        mu_mat = np.ndarray(shape=(n_samples, n_features))
+        mu_mat = np.array([self.mu_ for i in range(n_samples)])
+        # print(mu_mat)
         # creates mu matrix so we could centered X
-        for i in range(n_features):
-            mu_mat[:, i] = self.mu_.reshape((n_features,))
         centered_X = np.subtract(X, mu_mat)
         # use the formula we saw in the book 1/m-1*X~^T*X~
         self.cov_ = np.multiply(
@@ -275,9 +274,3 @@ class MultivariateGaussian:
         # calc the log sum as seen in the formula.
         log_sum = n * d * np.log(2 * np.pi) + np.log(cov_det)
         return (-1 / 2) * (log_sum + sum_for_vec) # add everything and return
-
-
-if __name__ == '__main__':
-    random_samples = np.random.normal(10, 1, 1000)
-    uni_gaussian = UnivariateGaussian()
-    uni_gaussian.fit(random_samples)
