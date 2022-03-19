@@ -28,8 +28,7 @@ def test_univariate_gaussian():
                         r"properties are consistent}$",
                   xaxis_title="$m\\text{ - number of samples}$",
                   yaxis_title="$\widehat\mu\\text{ - absolute distance "
-                              "between means}$",
-                  height=300)).show()
+                              "between means}$")).show()
 
     # Question 3 - Plotting Empirical PDF of fitted model
     pdf_vals = uni_g.pdf(samples)
@@ -39,8 +38,7 @@ def test_univariate_gaussian():
                   title=r"$\text{Q3 Particle section - Empirical PDF of "
                         r"fitted model}$",
                   xaxis_title="$\\text{Samples}$",
-                  yaxis_title="$PDF values$",
-                  height=300)).show()
+                  yaxis_title="$PDF values$")).show()
 
 
 def test_multivariate_gaussian():
@@ -73,8 +71,7 @@ def test_multivariate_gaussian():
     go.Figure(go.Heatmap(x=f_arr, y=f_arr, z=log_l_vals, ), layout=go.Layout(
         title=r"$\text{Q5 Particle section - Log Likelihood Heatmap}$",
         xaxis_title="$f1\\ values$",
-        yaxis_title="$f2\\ values$",
-        height=300)).show()
+        yaxis_title="$f2\\ values$")).show()
 
     # Question 6 - Maximum likelihood
     maxarg_model_ind = np.where(log_l_vals == np.amax(log_l_vals))
