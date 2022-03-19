@@ -57,13 +57,23 @@ class UnivariateGaussian:
         """
         self.mu_ = np.mean(X)
         cur_sum = 0
+        # sum the left value in the formula.
         for i in range(len(X)):
             cur_sum += (X[i] - self.mu_) ** 2
+        # get 1/m-1*sum
         self.var_ = (1 / (len(X) - 1)) * cur_sum
         self.fitted_ = True
         return self
 
     def __single_sample_pdf(self, x: float) -> float:
+        """
+        A short helper method that calculate a single value of the
+        UnivariateGaussian pdf, this will be called for each sample
+        to calculate the pdf.
+
+        x: sample, flot64
+        return: pdf value, float64
+        """
         const = 1 / np.sqrt(2 * np.pi * self.var_)
         # the const which is 1/sqrt(2*pi*var)
         exp_pow = (-1 / (2 * self.var_)) * (
@@ -184,10 +194,9 @@ class MultivariateGaussian:
         for i in range(n_features):
             cur_col = X[:, i]
             self.mu_[i] = np.mean(cur_col)
-            # mean each col in the sample matrix
-        mu_mat = np.array([self.mu_ for i in range(n_samples)])
-        # print(mu_mat)
+            # mean each col in the sample matrix to create mu vector.
         # creates mu matrix so we could centered X
+        mu_mat = np.array([self.mu_ for _ in range(n_samples)])
         centered_X = np.subtract(X, mu_mat)
         # use the formula we saw in the book 1/m-1*X~^T*X~
         self.cov_ = np.multiply(
@@ -196,15 +205,17 @@ class MultivariateGaussian:
         self.fitted_ = True
         return self
 
-    def __calculate_pdf_for_single_sample(self, x: np.ndarray) -> float:
+    def __calculate_pdf_for_single_sample(self, x: np.ndarray, cov_det: float)\
+            -> float:
         """
         Helper method to calculate the pdf for a single features vector.
 
         @param: x, np.ndarray of shape (n_features,)
+        @param: cov_det, covariance matrix det
 
         """
-        cov_det = np.linalg.det(self.cov_)  # get det
         centered_vec = np.subtract(x, self.mu_)
+        # calculate the const at the start of the formula.
         const = 1 / np.sqrt(((2 * np.pi) ** x.shape[0]) * cov_det)
         left_mal_calc = np.matmul(np.transpose(centered_vec),
                                   np.linalg.inv(self.cov_))
@@ -233,9 +244,10 @@ class MultivariateGaussian:
             raise ValueError(
                 "Estimator must first be fitted before calling `pdf` function")
         ret_val = np.ndarray(shape=(X.shape[0],))
+        cov_det = np.linalg.det(self.cov_)
         for j in range(X.shape[0]):
             # calc outside then assign the value back
-            ret_val[j] = self.__calculate_pdf_for_single_sample(X[j])
+            ret_val[j] = self.__calculate_pdf_for_single_sample(X[j], cov_det)
         return ret_val
 
     @staticmethod
@@ -265,12 +277,13 @@ class MultivariateGaussian:
         cov_inv = np.linalg.inv(cov)
         cov_det = np.linalg.det(cov)
         n, d = X.shape
-        sum_for_vec = 0
-        for j in range(n):
-            centered_vec = np.subtract(X[j], mu)
-            # matrix multiplication to get the scalar and sum it.
-            left = np.matmul(np.transpose(centered_vec), cov_inv)
-            sum_for_vec += np.matmul(left, centered_vec)
+        centered_s = X - mu
+        # for j in range(n):
+        #     centered_vec = np.subtract(X[j], mu)
+        #     # matrix multiplication to get the scalar and sum it.
+        #     left = np.matmul(np.transpose(centered_vec), cov_inv)
+        #     sum_for_vec += np.matmul(left, centered_vec)
+        sum_for_vec = np.sum(centered_s @ cov_inv * centered_s)
         # calc the log sum as seen in the formula.
         log_sum = n * d * np.log(2 * np.pi) + np.log(cov_det)
         return (-1 / 2) * (log_sum + sum_for_vec) # add everything and return

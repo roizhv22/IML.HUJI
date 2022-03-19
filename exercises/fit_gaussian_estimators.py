@@ -1,3 +1,5 @@
+import tqdm
+
 from IMLearn.learners import UnivariateGaussian, MultivariateGaussian
 import numpy as np
 import plotly.graph_objects as go
@@ -59,16 +61,12 @@ def test_multivariate_gaussian():
     f_arr = np.linspace(-10, 10, 200)
     # results matrix, which is 200x200
     log_l_vals = np.ndarray(shape=(len(f_arr), len(f_arr)))
-    max_v = -100000
     for i in range(len(f_arr)):
         for j in range(len(f_arr)):
             new_mu = np.array([f_arr[i], 0, f_arr[j], 0])
             log_l_vals[i][j] = mg.log_likelihood(new_mu, Sigma, samples)
-            if log_l_vals[i][j] > max_v:
-                # find max value to the argmax for log_likeihood
-                max_v = log_l_vals[i][j]
-                ind_t = i, j
-    go.Figure(go.Heatmap(x=f_arr, y=f_arr, z=log_l_vals, ), layout=go.Layout(
+    go.Figure(go.Heatmap(x=f_arr, y=f_arr, z=np.transpose(log_l_vals)),
+              layout=go.Layout(
         title=r"$\text{Q5 Particle section - Log Likelihood Heatmap}$",
         xaxis_title="$f1\\ values$",
         yaxis_title="$f2\\ values$")).show()
