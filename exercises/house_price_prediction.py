@@ -1,4 +1,3 @@
-import tqdm
 
 from IMLearn.utils import split_train_test
 from IMLearn.learners.regressors import LinearRegression
