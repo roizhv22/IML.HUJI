@@ -65,6 +65,7 @@ def test_multivariate_gaussian():
         for j in range(len(f_arr)):
             new_mu = np.array([f_arr[i], 0, f_arr[j], 0])
             log_l_vals[i][j] = mg.log_likelihood(new_mu, Sigma, samples)
+    # matrix was transposed to align the correct x,y values in the heatmap
     go.Figure(go.Heatmap(x=f_arr, y=f_arr, z=np.transpose(log_l_vals)),
               layout=go.Layout(
         title=r"$\text{Q5 Particle section - Log Likelihood Heatmap}$",
@@ -75,7 +76,6 @@ def test_multivariate_gaussian():
     maxarg_model_ind = np.where(log_l_vals == np.amax(log_l_vals))
     # wasn't instructed to print the values, but may easily be carried out.
     maxargs = (f_arr[maxarg_model_ind[0][0]], f_arr[maxarg_model_ind[1][0]])
-
 
 if __name__ == '__main__':
     np.random.seed(0)

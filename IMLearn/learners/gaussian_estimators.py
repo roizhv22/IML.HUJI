@@ -278,11 +278,6 @@ class MultivariateGaussian:
         cov_det = np.linalg.det(cov)
         n, d = X.shape
         centered_s = X - mu
-        # for j in range(n):
-        #     centered_vec = np.subtract(X[j], mu)
-        #     # matrix multiplication to get the scalar and sum it.
-        #     left = np.matmul(np.transpose(centered_vec), cov_inv)
-        #     sum_for_vec += np.matmul(left, centered_vec)
         sum_for_vec = np.sum(centered_s @ cov_inv * centered_s)
         # calc the log sum as seen in the formula.
         log_sum = n * d * np.log(2 * np.pi) + np.log(cov_det)
