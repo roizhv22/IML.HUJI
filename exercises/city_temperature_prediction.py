@@ -47,7 +47,6 @@ if __name__ == '__main__':
                       color=Israel_X['Year'].astype(str),
                       title="Q2.1 - Temp to DayOfYear Israel")
     fig1.write_image("ex2/plots/poly Q2.1.png")
-    # fig1.show()
     df_for_2 = Israel_X.groupby("Month").agg(np.std)
 
     df_for_2["Temp standard deviation"] = df_for_2['Temp']
@@ -58,7 +57,6 @@ if __name__ == '__main__':
     # Question 3 - Exploring differences between countries
     Q3_df_avg = X.groupby(["Country", "Month"]).agg(np.average)
     Q3_df_std = X.groupby(["Country", "Month"]).agg(np.std)
-    # print(Q3_df_std.loc["Israel"]['Temp'].to_dict())
 
     fig3 = go.Figure(data=[go.Scatter(x=[i for i in range(1, 13)],
                                       y=Q3_df_avg.loc[x]['Temp'],
@@ -82,7 +80,7 @@ if __name__ == '__main__':
         val = round(polyfit_model.loss(test_Israel['DayOfYear'],
                                        test_Israel['Temp']), 2)
         loss_per_deg.append(val)
-        print(val)
+        print(f"(k={i}, {val})")
 
     degs = [str(i) for i in range(1, 11)]
     fig4 = px.bar(x=[i for i in range(1, 11)], y=loss_per_deg, text_auto=True,
@@ -101,6 +99,6 @@ if __name__ == '__main__':
         errors.append(isra_model.loss(cur_c['DayOfYear'], cur_c['Temp']))
     fig5 = px.bar(x=countries, y=errors, text_auto=True, color=countries,
                   labels={"x": "Country", "y": "Model MSE"},
-                  title="Q5 polyfit - Israel_Model MSE for other countries, k=6")
+                  title="Q5 polyfit - Israel_Model MSE for other countries, k=5")
     fig5.write_image("ex2/plots/poly_Q5.png")
 

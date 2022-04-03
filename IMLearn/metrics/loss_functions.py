@@ -16,7 +16,7 @@ def mean_square_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     MSE of given predictions
     """
-    return np.mean(np.square(np.subtract(y_pred, y_true)))
+    return float(np.mean(np.square(np.subtract(y_pred, y_true))))
 
 
 

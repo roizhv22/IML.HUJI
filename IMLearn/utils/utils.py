@@ -35,9 +35,10 @@ def split_train_test(X: pd.DataFrame, y: pd.Series,
 
     """
 
-    split_at_row = int(len(X) * train_proportion)
-    train_X, test_X = X.iloc[:split_at_row], X.iloc[split_at_row:]
-    train_y, test_y = y.iloc[:split_at_row], y.iloc[split_at_row:]
+    train_X = X.sample(frac=0.75)
+    train_y = y.reindex_like(train_X)
+    test_X = X.drop(train_X.index)
+    test_y = y.drop(train_y.index)
     return train_X, train_y, test_X, test_y
 
 
