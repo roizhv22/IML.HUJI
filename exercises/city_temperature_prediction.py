@@ -90,7 +90,7 @@ if __name__ == '__main__':
     fig4.write_image("ex2/plots/poly_Q4.png")
 
     # Question 5 - Evaluating fitted model on different countries
-    isra_model = PolynomialFitting(6)
+    isra_model = PolynomialFitting(5)
     isra_model.fit(Israel_X['DayOfYear'], Israel_X['Temp'])
     errors = []
     countries = ['South Africa', 'The Netherlands', 'Jordan']
