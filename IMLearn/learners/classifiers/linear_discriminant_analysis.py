@@ -23,20 +23,22 @@ class LDA(BaseEstimator):
         The inverse of the estimated features covariance. To be set in `LDA.fit`
 
     self.pi_: np.ndarray of shape (n_classes)
-        The estimated class probabilities. To be set in `GaussianNaiveBayes.fit`
+        The estimated class probabilities. To be set in `LDA.fit`
     """
+
     def __init__(self):
         """
         Instantiate an LDA classifier
         """
         super().__init__()
-        self.classes_, self.mu_, self.cov_, self._cov_inv, self.pi_ = None, None, None, None, None
+        self.classes_, self.mu_, self.cov_, self._cov_inv, self.pi_ = None,\
+                                                    None, None, None, None
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
         fits an LDA model.
-        Estimates gaussian for each label class - Different mean vector, same covariance
-        matrix with dependent features.
+        Estimates gaussian for each label class - Different mean vector,
+        same covariance matrix with dependent features.
 
         Parameters
         ----------
@@ -46,7 +48,29 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        self.classes_ = np.unique(y)
+        self.pi_ = np.ndarray((len(self.classes_),))
+        self.mu_ = np.ndarray((len(self.classes_), len(X[0])))
+        self.mu_map_ = {}
+        m = len(y)
+        # find pi + mu_k
+        for i in range(len(self.classes_)):
+            n_k = (y == self.classes_[i]).sum()
+            self.pi_[i] = n_k / m
+            mu_vec = np.zeros((len(X[0]),))
+            for j in range(m):
+                if y[j] == self.classes_[i]:
+                    mu_vec += X[j]
+            self.mu_[i] = (1 / n_k) * mu_vec
+            self.mu_map_[self.classes_[i]] = self.mu_[i]
+
+        # find var
+        self.cov_ = np.zeros((m, m))
+        for i in range(m):
+            self.cov_ += (X[i] - self.mu_map_[y[i]]) @ \
+                         np.transpose((X[i] - self.mu_map_[y[i]]))
+        self.cov_ *= 1 / m
+        self._cov_inv = np.linalg.inv(self.cov_)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +86,21 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        a_k = np.ndarray((len(self.classes_),))
+        b_k = np.ndarray((len(self.classes_),))
+        res = np.ndarray((len(X),))
+        for i in range(len(self.classes_)):
+            a_k[i] = self._cov_inv @ self.mu_[i]
+            b_k[i] = np.log(self.pi_[i]) - (1 / 2) * (
+                        self.mu_[i] @ self._cov_inv @
+                        self.mu_[i])
+        for i in range(len(X)):
+            vals = np.ndarray((len(self.classes_),))
+            for j in range(len(self.classes_)):
+                vals[j] = np.transpose(a_k[j]) @ X[i] + b_k[j]
+            res[i] = self.classes_[np.argmax(vals)]
+
+        return res
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -80,9 +118,27 @@ class LDA(BaseEstimator):
 
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `likelihood` function")
+            raise ValueError("Estimator must first be fitted before "
+                             "calling `likelihood` function")
 
-        raise NotImplementedError()
+        res = np.zeros((len(X), len(self.classes_)))
+        const = 1 / np.sqrt(
+            np.power(2 * np.pi, len(X)) * np.linalg.det(self.cov_))
+
+        # samples x classes
+        # for i in range(len(X)):
+        #     for k in range(len(self.classes_)):
+        #         exp_val = np.exp(
+        #             (-1 / 2) * np.transpose((X[i] - self.mu_[k])) @ \
+        #             self._cov_inv @ (X[i] - self.mu_[k]))
+        #         res[i][k] = self.pi_[k] * const * exp_val
+
+        for k in range(len(self.classes_)):
+            vec = np.diag((X - self.mu_[k]) @ self._cov_inv @ np.transpose((X -
+                                                            self.mu_[k])))
+            res[:, k] = self.pi_[k] * const * np.exp((-1/2) * vec)
+
+        return res
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -102,4 +158,5 @@ class LDA(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        pred = self._predict(X)
+        return misclassification_error(y, pred)
