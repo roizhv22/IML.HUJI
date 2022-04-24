@@ -48,6 +48,15 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
+        # k = self.classes_.size
+        # self.mu_ = np.array([np.mean(X[y== c], axis=0) for c in self.classes_])
+        # mu_Y = np.array([self.mu_[int(y_i)] for y_i in y])
+        # c_h = np.array([X[i] - mu_Y[i] for i in range(len(X))])
+        # self.cov_ = np.matmul(c_h.T, c_h) / (len(X) - k)
+        # self._cov_inv = np.linalg.inv(self.cov_)
+        # self.pi_ = np.array([(y == self.classes_[i]).sum() / len(X) for i in range(len(self.classes_)))
+        # return
+
         self.classes_ = np.unique(y)
         self.pi_ = np.ndarray((len(self.classes_),))
         self.mu_ = np.ndarray((len(self.classes_), len(X[0])))
@@ -65,12 +74,15 @@ class LDA(BaseEstimator):
             self.mu_map_[self.classes_[i]] = self.mu_[i]
 
         # find var
-        self.cov_ = np.zeros((m, m))
+        self.cov_ = np.zeros((len(X[0]), len(X[0])))
         for i in range(m):
-            self.cov_ += (X[i] - self.mu_map_[y[i]]) @ \
-                         np.transpose((X[i] - self.mu_map_[y[i]]))
-        self.cov_ *= 1 / m
+            vec = np.matrix((X[i] - self.mu_map_[y[i]]))
+            self.cov_ += (vec.T @ vec)
+        self.cov_ = self.cov_ * (1/m)
         self._cov_inv = np.linalg.inv(self.cov_)
+
+
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -86,18 +98,19 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        a_k = np.ndarray((len(self.classes_),))
-        b_k = np.ndarray((len(self.classes_),))
+        a_k = np.ndarray((len(self.classes_),len(self.classes_)-1))
+        b_k = np.ndarray((len(self.classes_),1))
         res = np.ndarray((len(X),))
         for i in range(len(self.classes_)):
             a_k[i] = self._cov_inv @ self.mu_[i]
             b_k[i] = np.log(self.pi_[i]) - (1 / 2) * (
                         self.mu_[i] @ self._cov_inv @
                         self.mu_[i])
+
         for i in range(len(X)):
             vals = np.ndarray((len(self.classes_),))
             for j in range(len(self.classes_)):
-                vals[j] = np.transpose(a_k[j]) @ X[i] + b_k[j]
+                vals[j] = (np.transpose(a_k[j]) @ X[i]) + b_k[j]
             res[i] = self.classes_[np.argmax(vals)]
 
         return res
@@ -125,13 +138,6 @@ class LDA(BaseEstimator):
         const = 1 / np.sqrt(
             np.power(2 * np.pi, len(X)) * np.linalg.det(self.cov_))
 
-        # samples x classes
-        # for i in range(len(X)):
-        #     for k in range(len(self.classes_)):
-        #         exp_val = np.exp(
-        #             (-1 / 2) * np.transpose((X[i] - self.mu_[k])) @ \
-        #             self._cov_inv @ (X[i] - self.mu_[k]))
-        #         res[i][k] = self.pi_[k] * const * exp_val
 
         for k in range(len(self.classes_)):
             vec = np.diag((X - self.mu_[k]) @ self._cov_inv @ np.transpose((X -

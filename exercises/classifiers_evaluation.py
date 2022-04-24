@@ -47,12 +47,13 @@ def run_perceptron():
             precp.loss(sample, response))
         percep = Perceptron(callback=cb)
         percep.fit(X, y)
-
         # Plot figure of loss as function of fitting iteration
-        plot = go.Figure(go.Scatter(x=[i for i in range(len(losses))], y=losses, mode="markers"),
-                         layout=go.Layout(title=f"{n} Preceptron's loss to iteration plot",
-                                      xaxis_title="Iterations",
-                                      yaxis_title="Model's loss"))
+        plot = go.Figure(
+            go.Scatter(x=[i for i in range(len(losses))], y=losses,
+                       mode="markers"),
+            layout=go.Layout(title=f"{n} Preceptron's loss to iteration plot",
+                             xaxis_title="Iterations",
+                             yaxis_title="Model's loss"))
         plot.write_image(
             f"C:/Users/roizh/Desktop/IML.HUJI/"
             f"exercises/ex3/plots/{n} Preceptron's results.png")
@@ -91,28 +92,45 @@ def compare_gaussian_classifiers():
     """
     for f in ["gaussian1.npy", "gaussian2.npy"]:
         # Load dataset
-        raise NotImplementedError()
-
+        X, y = load_dataset(f"../datasets/{f}")
         # Fit models and predict over training set
-        raise NotImplementedError()
-
+        naive = GaussianNaiveBayes()
+        lda = LDA()
+        lda.fit(X, y)
+        naive.fit(X, y)
+        naive_pred = naive.predict(X)
+        lda_pred = lda.predict(X)
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         # Create subplots
         from IMLearn.metrics import accuracy
-        raise NotImplementedError()
-
-        # Add traces for data-points setting symbols and colors
-        raise NotImplementedError()
+        fig = make_subplots(1, 2, vertical_spacing=1 / 4,
+                            subplot_titles=[f"Gaussian Naive Bayes, accuracy "
+                                            f"{accuracy(y, naive_pred)}",
+                                            f"LDA, accuracy "
+                                            f"{accuracy(y, lda_pred)}"])
+        fig.update_layout(title={"text": f })
+        # naive
+        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+                                 marker=dict(color=y, symbol=naive_pred),
+                                 text=f"Gaussian Naive Bayes, accuracy "
+                                      f"{accuracy(y, naive_pred)}"), row=1,
+                      col=1)
+        # LDA
+        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+                                 marker=dict(color=y, symbol=lda_pred)), row=1,
+                      col=2)
 
         # Add `X` dots specifying fitted Gaussians' means
         raise NotImplementedError()
 
         # Add ellipses depicting the covariances of the fitted Gaussians
-        raise NotImplementedError()
+        fig.show()
+
+
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
-    # compare_gaussian_classifiers()
+    # run_perceptron()
+    compare_gaussian_classifiers()
