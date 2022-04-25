@@ -88,7 +88,8 @@ def get_ellipse(mu: np.ndarray, cov: np.ndarray):
 
 def compare_gaussian_classifiers():
     """
-    Fit both Gaussian Naive Bayes and LDA classifiers on both gaussians1 and gaussians2 datasets
+    Fit both Gaussian Naive Bayes and LDA classifiers on both
+    gaussians1 and gaussians2 datasets
     """
     for f in ["gaussian1.npy", "gaussian2.npy"]:
         # Load dataset
@@ -100,33 +101,54 @@ def compare_gaussian_classifiers():
         naive.fit(X, y)
         naive_pred = naive.predict(X)
         lda_pred = lda.predict(X)
-        # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
-        # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
+
+        # Plot a figure with two subplots, showing the Gaussian Naive
+        # Bayes predictions on the left and LDA predictions
+        # on the right. Plot title should specify dataset used and
+        # subplot titles should specify algorithm and accuracy
         # Create subplots
         from IMLearn.metrics import accuracy
-        fig = make_subplots(1, 2, vertical_spacing=1 / 4,
+        fig = make_subplots(1, 2,
                             subplot_titles=[f"Gaussian Naive Bayes, accuracy "
                                             f"{accuracy(y, naive_pred)}",
                                             f"LDA, accuracy "
                                             f"{accuracy(y, lda_pred)}"])
         fig.update_layout(title={"text": f })
         # naive
-        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+        fig.add_scatter(x=X[:, 0], y=X[:, 1], mode="markers",
                                  marker=dict(color=y, symbol=naive_pred),
                                  text=f"Gaussian Naive Bayes, accuracy "
-                                      f"{accuracy(y, naive_pred)}"), row=1,
+                                      f"{accuracy(y, naive_pred)}", row=1,
                       col=1)
+
         # LDA
-        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
-                                 marker=dict(color=y, symbol=lda_pred)), row=1,
+        fig.add_scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+                        marker=dict(color=y, symbol=lda_pred),xaxis="x", row=1,
                       col=2)
+        fig.update_xaxes(title_text="Feature 1",row=1,col=1)
+        fig.update_xaxes(title_text="Feature 1", row=1, col=2)
+        fig.update_yaxes(title_text="Feature 2", row=1, col=1)
+        fig.update_yaxes(title_text="Feature 2", row=1, col=2)
 
         # Add `X` dots specifying fitted Gaussians' means
-        raise NotImplementedError()
+        fig.add_scatter(x=lda.mu_[:, 0], y=lda.mu_[:, 1], mode="markers",marker=dict(color="black", symbol="x"),
+                        row=1, col=1)
+        fig.add_scatter(x=naive.mu_[:, 0], y=naive.mu_[:, 1], mode="markers",
+                        marker=dict(color="black", symbol="x"),
+                        row=1, col=2)
+
 
         # Add ellipses depicting the covariances of the fitted Gaussians
-        fig.show()
+        fig.add_trace(get_ellipse(lda.mu_[0], lda.cov_), col=2, row=1)
+        fig.add_trace(get_ellipse(lda.mu_[1], lda.cov_), col=2, row=1)
+        fig.add_trace(get_ellipse(lda.mu_[2], lda.cov_), col=2, row=1)
+        fig.add_trace(get_ellipse(naive.mu_[0], np.diag(naive.vars_[0])), col=1, row=1)
+        fig.add_trace(get_ellipse(naive.mu_[1], np.diag(naive.vars_[1])),
+                      col=1, row=1)
+        fig.add_trace(get_ellipse(naive.mu_[2], np.diag(naive.vars_[2])),
+                      col=1, row=1)
 
+        fig.show()
 
 
 
