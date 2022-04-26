@@ -48,14 +48,6 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        # k = self.classes_.size
-        # self.mu_ = np.array([np.mean(X[y== c], axis=0) for c in self.classes_])
-        # mu_Y = np.array([self.mu_[int(y_i)] for y_i in y])
-        # c_h = np.array([X[i] - mu_Y[i] for i in range(len(X))])
-        # self.cov_ = np.matmul(c_h.T, c_h) / (len(X) - k)
-        # self._cov_inv = np.linalg.inv(self.cov_)
-        # self.pi_ = np.array([(y == self.classes_[i]).sum() / len(X) for i in range(len(self.classes_)))
-        # return
 
         self.classes_ = np.unique(y)
         self.pi_ = np.ndarray((len(self.classes_),))

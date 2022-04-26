@@ -118,14 +118,14 @@ def compare_gaussian_classifiers():
         fig.update_layout(title={"text": f})
         # naive
         fig.add_scatter(x=X[:, 0], y=X[:, 1], mode="markers",
-                        marker=dict(color=y, symbol=naive_pred),
+                        marker=dict(color=naive_pred, symbol=y),
                         text=f"Gaussian Naive Bayes, accuracy "
                              f"{accuracy(y, naive_pred)}", row=1,
                         col=1)
 
         # LDA
         fig.add_scatter(x=X[:, 0], y=X[:, 1], mode="markers",
-                        marker=dict(color=y, symbol=lda_pred), xaxis="x",
+                        marker=dict(color=lda_pred, symbol=y), xaxis="x",
                         row=1,
                         col=2)
         fig.update_xaxes(title_text="Feature 1", row=1, col=1)
