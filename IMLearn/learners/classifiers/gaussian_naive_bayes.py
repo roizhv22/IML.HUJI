@@ -64,7 +64,7 @@ class GaussianNaiveBayes(BaseEstimator):
                     if y[i] == self.classes_[k]:
                         val += (X[i][j] - self.mu_[k][j]) * (X[i][j] -
                                                              self.mu_[k][j])
-                self.vars_[k][j] = (1 / (n_k-1)) * val  # sigma^2
+                self.vars_[k][j] = (1 / (n_k-1)) * val  # sigma^2, unbiased
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
