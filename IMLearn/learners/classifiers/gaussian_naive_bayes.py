@@ -50,7 +50,7 @@ class GaussianNaiveBayes(BaseEstimator):
         for j in range(len(X[0])):
             for k in range(len(self.classes_)):
                 n_k = (y == self.classes_[k]).sum()
-                self.pi_[k] = n_k / m
+                self.pi_[k] = (n_k / m)
                 val = 0
                 for i in range(m):
                     if y[i] == self.classes_[k]:
@@ -64,7 +64,7 @@ class GaussianNaiveBayes(BaseEstimator):
                     if y[i] == self.classes_[k]:
                         val += (X[i][j] - self.mu_[k][j]) * (X[i][j] -
                                                              self.mu_[k][j])
-                self.vars_[k][j] = (1 / n_k) * val  # sigma^2
+                self.vars_[k][j] = (1 / (n_k-1)) * val  # sigma^2
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -80,18 +80,6 @@ class GaussianNaiveBayes(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        # a_k = np.ndarray((len(self.classes_), len(self.classes_)-1))
-        # b_k = np.ndarray((len(self.classes_),))
-        # res = np.ndarray((len(X),))
-        # for i in range(len(self.classes_)):
-        #     cov = np.linalg.inv(np.diag(self.vars_[i]))
-        #     a_k[i] = cov @ self.mu_[i]
-        #     b_k[i] = np.log(self.pi_[i]) - \
-        #              (1 / 2) * (self.mu_[i] @ cov @ self.mu_[i])
-        #
-        # for i in range(len(X)):
-        #     vals = [(a_k[j].T @ X[i]) + b_k[j] for j in range(len(self.classes_))]
-        #     res[i] = self.classes_[np.argmax(vals)]
 
         arg_max_ind = np.argmax(self.likelihood(X), axis=1)
         # get the argmax in each column, which is the argmax in each smaple,
