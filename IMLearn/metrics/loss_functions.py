@@ -40,7 +40,7 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray,
     n = len(y_true)
     counter = 0
     for i in range(len(y_true)):
-        if y_true[i] * y_pred[i] < 0:
+        if np.sign(y_true[i]) != np.sign(y_pred[i]):
             counter += 1
     if normalize:
         return counter / n
