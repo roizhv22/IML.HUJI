@@ -110,7 +110,7 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
     fig3.write_image(f"ex4/Q3 noise {noise}.jpeg")
 
     # Question 4: Decision surface with weighted samples
-    s = adaboost.D_/np.max(adaboost.D_) * 5
+    s = adaboost.D_/np.max(adaboost.D_) * 5.0
     fig4 = go.Figure(data=[decision_surface(adaboost.predict,
                                             lims[0], lims[1],
                                             showscale=False),
@@ -129,5 +129,5 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
 
 if __name__ == '__main__':
     np.random.seed(0)
-    # fit_and_evaluate_adaboost(0)
+    fit_and_evaluate_adaboost(0)
     fit_and_evaluate_adaboost(0.4)

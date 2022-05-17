@@ -1,5 +1,4 @@
 import numpy as np
-import tqdm
 
 from ..base import BaseEstimator
 from typing import Callable, NoReturn
@@ -50,16 +49,16 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        D = np.array([(1 / len(X)) for _ in range(len(X))])
+        D = np.array([(1.0 / len(X)) for _ in range(len(X))])
         self.models_ = np.ndarray((self.iterations_,), dtype=self.wl_)
         self.weights_ = np.ndarray((self.iterations_,), dtype=float)
-        for t in tqdm.tqdm(range(self.iterations_)):
+        for t in range(self.iterations_):
             stump = self.wl_().fit(X, y * D)
             pred = stump.predict(X)
             e = np.sum(D * np.where((pred != y), 1, 0))
-            w = (1 / 2) * np.log((1 - e) / e)
+            w = 0.5 * np.log((1.0 - e) / e)
             D = D * np.exp(-y * w * pred)
-            D *= 1 / np.sum(D)
+            D *= 1.0 / np.sum(D)
             self.models_[t] = stump
             self.weights_[t] = w
         self.D_ = D

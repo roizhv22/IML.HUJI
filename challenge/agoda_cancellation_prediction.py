@@ -1,5 +1,7 @@
 import math
 
+import sklearn.linear_model
+import sklearn.neural_network
 import tqdm
 from sklearn.base import BaseEstimator
 
