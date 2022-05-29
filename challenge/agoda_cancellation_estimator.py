@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from typing import NoReturn
 
+import sklearn.tree
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.metrics import f1_score
 from sklearn.neighbors import KNeighborsClassifier
@@ -55,6 +57,7 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         self.model = sklearn.tree.DecisionTreeClassifier(max_depth=7)
         self.model.fit(X,y)
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """

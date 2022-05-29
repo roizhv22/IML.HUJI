@@ -185,19 +185,13 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray,
         path to store file at
 
     """
-    pd.DataFrame(estimator.predict(X), columns=["predicted_values"]).to_csv(filename, index=False)
+    pd.DataFrame(estimator.predict(X), columns=["predicted_values"]).to_csv(
+        filename, index=False)
 
 
 def parse_test(df: pd.DataFrame):
-    # only one col.
-    for row in df.itertuples():
-        # -> id | verdict.
-        val = row[1]  # make sure working.
-        # print(val)
-        val = val.split("|")
-        # df['id'] = val[0].strip()
-        df['label'] = val[1].strip()
-    return df['label']
+
+    return df['h_booking_id|label'].apply(lambda row: int(row[-1]))
 
 
 def load_set_label(filename: str):
@@ -317,9 +311,8 @@ def load_set_label(filename: str):
         'customer_nationality'].apply(parse_countries)
     full_data['charge_parsed'] = full_data['charge_option'].apply(
         charge_preprocess)
-    # full_data['cancellation_datetime'] = pd.to_datetime(full_data['cancellation_datetime'])
     features = full_data.drop(
-        ["cancellation_datetime", "h_booking_id", "h_customer_id",
+        ["h_booking_id", "h_customer_id",
          'cancellation_policy_code', 'customer_nationality',
          'hotel_id'],
         axis=1)
@@ -334,15 +327,23 @@ if __name__ == '__main__':
     df, cancellation_labels = load_data(
         "../datasets/agoda_cancellation_train.csv")
     estimator = AgodaCancellationEstimator()
+
     print("fitting")
     estimator.fit(df, cancellation_labels)
+
+    print("predicting")
+    val = []
+
     # Fit model over data
-    for i in range(1,5):
+    for i in range(1, 5):
         test_X = load_set_label(f"../challenge/test_set_week_{i}.csv")
-        test_Y = parse_test(pd.read_csv(f"../challenge/test_set_week_{i}_labels.csv",
-                                        dtype=str))
-        print(f"Loss on test_{i} was {estimator.loss(test_X,test_Y)}")
+        test_Y = parse_test(
+            pd.read_csv(f"../challenge/test_set_week_{i}_labels.csv",
+                        dtype=str))
+        # evaluate_and_export(estimator, test_X, f"results_{i}.csv")
+        val.append(estimator.loss(test_X, test_Y))
+        # print(f"Loss on test_{i} was {val[-1]}")
+    print(val)
 
-
-    # Store model predictions over test set
-    # evaluate_and_export(estimator, test_set, "id1_id2_id3.csv")
+        # Store model predictions over test set
+        # print("finishing")

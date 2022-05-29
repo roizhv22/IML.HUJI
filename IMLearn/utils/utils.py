@@ -34,8 +34,9 @@ def split_train_test(X: pd.DataFrame, y: pd.Series,
         Responses of test samples
 
     """
-
-    train_X = X.sample(frac=0.75)
+    X = pd.DataFrame(X)
+    y = pd.Series(y)
+    train_X = X.sample(frac=train_proportion)
     train_y = y.reindex_like(train_X)
     test_X = X.drop(train_X.index)
     test_y = y.drop(train_y.index)
