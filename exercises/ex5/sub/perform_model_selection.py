@@ -58,7 +58,8 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
                     name="Train"),
          go.Scatter(x=x2, y=test_y, mode="markers",
                     name="Test")]
-        , layout=go.Layout(title=f"Q1,noise = {noise}, n={n_samples}", xaxis_title="x", yaxis_title="y"))
+        , layout=go.Layout(title=f"Q1,noise = {noise}, n={n_samples}",
+                           xaxis_title="x", yaxis_title="y"))
     fig1.write_image(f"ex5/Q1 noise = {noise}, n={n_samples}.jpeg")
     # fig1.show()
 
@@ -77,7 +78,8 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
                     name="Train score"),
          go.Scatter(x=list(range(11)), y=validate, mode="markers+lines",
                     name="Validation score")]
-        , layout=go.Layout(title=f"Q2, noise = {noise}, n={n_samples}", xaxis_title="K", yaxis_title="Score"))
+        , layout=go.Layout(title=f"Q2, noise = {noise}, n={n_samples}",
+                           xaxis_title="K", yaxis_title="Score"))
     fig2.write_image(f"ex5/Q2 noise = {noise}, n={n_samples}.jpeg")
     # fig2.show()
 
@@ -105,9 +107,9 @@ def select_regularization_parameter(n_samples: int = 50,
     """
     # Question 6 - Load diabetes dataset and split into training and testing portions
     X, y = datasets.load_diabetes(return_X_y=True)
-    test_X, test_y, train_X, train_y = X[:n_samples], y[:n_samples], \
+    train_X, train_y, test_X, test_y = X[:n_samples], y[:n_samples], \
                                        X[n_samples:], y[n_samples:]
-    lam_vals = np.linspace(0, 0.5, 500)
+    lam_vals = np.linspace(0, 1, n_evaluations)
 
     # Question 7 - Perform CV for different values of the
     # regularization parameter for Ridge and Lasso regressions
@@ -161,7 +163,7 @@ def select_regularization_parameter(n_samples: int = 50,
 
 if __name__ == '__main__':
     np.random.seed(0)
-    select_polynomial_degree()
-    select_polynomial_degree(noise=0)
-    select_polynomial_degree(n_samples=1500, noise=10)
+    # select_polynomial_degree()
+    # select_polynomial_degree(noise=0)
+    # select_polynomial_degree(n_samples=1500, noise=10)
     select_regularization_parameter()
