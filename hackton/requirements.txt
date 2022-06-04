@@ -1,5 +1,0 @@
-sklearn
-numpy
-pandas
-tqdm
-docopt
