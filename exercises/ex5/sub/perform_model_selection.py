@@ -38,11 +38,11 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
         return (x + 3) * (x + 2) * (x + 1) * (x - 1) * (x - 2)
 
     y = np.array([poly(x) for x in axis])
-
+    y_noise = y + np.random.normal(0, noise, n_samples)
     # set datasets
-    train_X, train_y, test_X, test_y = split_train_test(axis, y, 0.6666667)
-    train_y += np.random.normal(0, noise, len(train_y))
-    test_y += np.random.normal(0, noise, len(test_y))
+    train_X, train_y, test_X, test_y = split_train_test(axis, y_noise,
+                                                        0.6666667)
+
 
     x1 = numpy.take(axis, train_X.index)
     x2 = numpy.take(axis, test_X.index)
@@ -153,17 +153,16 @@ def select_regularization_parameter(n_samples: int = 50,
     ridge.fit(train_X, train_y)
     lasso.fit(train_X, train_y)
     lr.fit(train_X, train_y)
-    print(f"Ridge achieved {ridge.loss(test_X,test_y)} with lambda of "
+    print(f"Ridge achieved {ridge.loss(test_X, test_y)} with lambda of "
           f"{best_for_ridge}")
     print(f"Lasso achieved {mean_square_error(test_y, lasso.predict(test_X))}"
           f" with lambda of {best_for_lasso}")
     print(f"Basic linear regression achieved {lr.loss(test_X, test_y)}")
 
 
-
 if __name__ == '__main__':
     np.random.seed(0)
-    # select_polynomial_degree()
+    select_polynomial_degree()
     # select_polynomial_degree(noise=0)
     # select_polynomial_degree(n_samples=1500, noise=10)
-    select_regularization_parameter()
+    # select_regularization_parameter()
