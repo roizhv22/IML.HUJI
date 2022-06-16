@@ -73,12 +73,37 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    raise NotImplementedError()
+
+    res_weights = []
+    res_values = []
+
+    def callback(output, weights, grad, t, eta):
+        res_weights.append(weights)
+        res_values.append(output)
+
+    return callback, res_values, res_weights
+
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
-    raise NotImplementedError()
+
+    for eta in etas:
+        cb_l1, values_l1, weights_l1 = get_gd_state_recorder_callback()
+        cb_l2, values_l2, weights_l2 = get_gd_state_recorder_callback()
+        gd_l1 = GradientDescent(FixedLR(eta), callback=cb_l1)
+        gd_l2 = GradientDescent(FixedLR(eta), callback=cb_l2)
+        gd_l1.fit(L1(init), X=None, y=None)
+        gd_l2.fit(L2(init), X=None, y=None)
+        f1 = plot_descent_path(L1, weights_l1, f"l1 decent path with eta={eta}")
+        # f2 = plot_descent_path(L2, np.ndarray(weights_l2,shape=(len(weights_l2),2)),
+        #                   f"L2 decent path with eta={eta}")
+        f1.show()
+        # f2.show()
+
+
+
+
 
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
@@ -141,5 +166,5 @@ def fit_logistic_regression():
 if __name__ == '__main__':
     np.random.seed(0)
     compare_fixed_learning_rates()
-    compare_exponential_decay_rates()
-    fit_logistic_regression()
+    # compare_exponential_decay_rates()
+    # fit_logistic_regression()

@@ -39,12 +39,14 @@ class GradientDescent:
         Callable function receives as input any argument relevant for the current GD iteration. Arguments
         are specified in the `GradientDescent.fit` function
     """
+
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
                  max_iter: int = 1000,
                  out_type: str = "last",
-                 callback: Callable[[GradientDescent, ...], None] = default_callback):
+                 callback: Callable[
+                     [GradientDescent, ...], None] = default_callback):
         """
         Instantiate a new instance of the GradientDescent class
 
@@ -124,21 +126,20 @@ class GradientDescent:
         i = 0
         delta = np.inf
         while i < self.max_iter_ or delta > self.tol_:
-            grad_dir = -1.0 * f.compute_jacobian(X, y)
-            n = self.learning_rate_.lr_step(i)
+            grad_dir = -1.0 * f.compute_jacobian(X=X, y=y)
+            n = self.learning_rate_.lr_step()
             old_w = f.weights
-            f.weights += n*grad_dir
-            delta = np.abs(f.weights - old_w)
-            self.callback_(self, f.weights, f.compute_output(X, y),
-                           f.compute_jacobian(X, y), i, n, delta)
+            f.weights += n * grad_dir
+            delta = np.abs(np.linalg.norm(f.weights - old_w, ord=2))
+            self.callback_(f.compute_output(X=X, y=y), f.weights,
+                           f.compute_jacobian(X=X, y=y), i, n)
             i += 1
             steps.append(old_w)
-            values.append(f.compute_output(X, y))
+            values.append(f.compute_output(X=X, y=y))
 
         if self.out_type_ == "last":
             return steps[-1]
         elif self.out_type_ == "average":
-            return np.mean(values)
+            return np.mean(steps)
         elif self.out_type_ == "best":
-            return values[np.argmin(steps)]
-
+            return steps[np.argmin(values)]
