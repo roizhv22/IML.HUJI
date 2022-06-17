@@ -125,18 +125,17 @@ class GradientDescent:
         values = []
         i = 0
         delta = np.inf
-        while i < self.max_iter_ or delta > self.tol_:
+        while i < self.max_iter_ and delta > self.tol_:
             grad_dir = -1.0 * f.compute_jacobian(X=X, y=y)
-            n = self.learning_rate_.lr_step()
+            n = self.learning_rate_.lr_step(i)
             old_w = f.weights
-            f.weights += n * grad_dir
+            f.weights = f.weights + n * grad_dir
             delta = np.abs(np.linalg.norm(f.weights - old_w, ord=2))
             self.callback_(f.compute_output(X=X, y=y), f.weights,
                            f.compute_jacobian(X=X, y=y), i, n)
             i += 1
             steps.append(old_w)
             values.append(f.compute_output(X=X, y=y))
-
         if self.out_type_ == "last":
             return steps[-1]
         elif self.out_type_ == "average":
