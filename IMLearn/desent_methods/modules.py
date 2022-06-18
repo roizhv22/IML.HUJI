@@ -135,10 +135,10 @@ class LogisticModule(BaseModule):
             Value of function at point self.weights
         """
         #  - (1/m) sum_i^m[y*<x_i,w> - log(1+exp(<x_i,w>))]
-        sum = 0
+        sum = .0
         for i in range(len(X)):
-            sum += y[i] * np.dot(X[i], self.weights) - \
-                   np.log(1 + np.exp(np.dot(X[i], self.weights)))
+            sum += y[i] * np.dot(X[i], self.weights) - np.log(1.0 +
+                                        np.exp(np.dot(X[i], self.weights)))
         return np.array((- 1.0 / len(X)) * sum)
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray,
@@ -161,9 +161,8 @@ class LogisticModule(BaseModule):
         """
         base = np.zeros(shape=(len(X[0]),))
         for i in range(0, len(X)):
-            expres = np.exp(np.dot(X[i], self.weights)) / \
-                     1 + np.exp(np.dot(X[i], self.weights))
-            base += X[i]*(y[i] - expres)
+            expres = 1.0 - (1.0/(1+np.exp(np.dot(X[i], self.weights))))
+            base = base + (X[i]*y[i] - X[i]*expres)
         return (-1.0 / len(X)) * base
 
 
