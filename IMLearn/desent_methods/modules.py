@@ -8,6 +8,7 @@ class L2(BaseModule):
 
     Represents the function: f(w)=||w||^2_2
     """
+
     def __init__(self, weights: np.ndarray = None):
         """
         Initialize a module instance
@@ -35,7 +36,6 @@ class L2(BaseModule):
         """
         return np.linalg.norm(self.weights, ord=2)
 
-
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """
         Compute L2 derivative with respect to self.weights at point self.weights
@@ -50,8 +50,7 @@ class L2(BaseModule):
         output: ndarray of shape (n_in,)
             L2 derivative with respect to self.weights at point self.weights
         """
-        return self.weights*2
-
+        return self.weights * 2
 
 
 class L1(BaseModule):
@@ -105,6 +104,7 @@ class LogisticModule(BaseModule):
 
     Represents the function: f(w) = - (1/m) sum_i^m[y*<x_i,w> - log(1+exp(<x_i,w>))]
     """
+
     def __init__(self, weights: np.ndarray = None):
         """
         Initialize a logistic regression module instance
@@ -116,7 +116,8 @@ class LogisticModule(BaseModule):
         """
         super().__init__(weights)
 
-    def compute_output(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
+    def compute_output(self, X: np.ndarray, y: np.ndarray,
+                       **kwargs) -> np.ndarray:
         """
         Compute the output value of the logistic regression objective function at point self.weights
 
@@ -133,9 +134,15 @@ class LogisticModule(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        #  - (1/m) sum_i^m[y*<x_i,w> - log(1+exp(<x_i,w>))]
+        sum = 0
+        for i in range(len(X)):
+            sum += y[i] * np.dot(X[i], self.weights) - \
+                   np.log(1 + np.exp(np.dot(X[i], self.weights)))
+        return np.array((- 1.0 / len(X)) * sum)
 
-    def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
+    def compute_jacobian(self, X: np.ndarray, y: np.ndarray,
+                         **kwargs) -> np.ndarray:
         """
         Compute the gradient of the logistic regression objective function at point self.weights
 
@@ -152,7 +159,12 @@ class LogisticModule(BaseModule):
         output: ndarray of shape (n_features,)
             Derivative of function with respect to self.weights at point self.weights
         """
-        raise NotImplementedError()
+        base = np.zeros(shape=(len(X[0]),))
+        for i in range(0, len(X)):
+            expres = np.exp(np.dot(X[i], self.weights)) / \
+                     1 + np.exp(np.dot(X[i], self.weights))
+            base += X[i]*(y[i] - expres)
+        return (-1.0 / len(X)) * base
 
 
 class RegularizedModule(BaseModule):
@@ -162,6 +174,7 @@ class RegularizedModule(BaseModule):
     for F(w) being some fidelity function, R(w) some regularization function and lambda
     the regularization parameter
     """
+
     def __init__(self,
                  fidelity_module: BaseModule,
                  regularization_module: BaseModule,
@@ -189,7 +202,8 @@ class RegularizedModule(BaseModule):
             Should fidelity term (and not regularization term) include an intercept or not
         """
         super().__init__()
-        self.fidelity_module_, self.regularization_module_, self.lam_ = fidelity_module, regularization_module, lam
+        self.fidelity_module_, self.regularization_module_, \
+        self.lam_ = fidelity_module, regularization_module, lam
         self.include_intercept_ = include_intercept
 
         if weights is not None:
@@ -197,7 +211,8 @@ class RegularizedModule(BaseModule):
 
     def compute_output(self, **kwargs) -> np.ndarray:
         """
-        Compute the output value of the regularized objective function at point self.weights
+        Compute the output value of the regularized objective function
+        at point self.weights
 
         Parameters
         ----------
@@ -209,7 +224,16 @@ class RegularizedModule(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        X, y = "", ""
+        for key, val in kwargs.items():
+            if key == 'X':
+                X = val
+            elif key == 'y':
+                y = val
+
+        return self.fidelity_module_.compute_output(X=X,
+                                                    y=y) + self.lam_ * self. \
+                   regularization_module_.compute_output(X=X, y=y)
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """
@@ -224,8 +248,19 @@ class RegularizedModule(BaseModule):
         -------
         output: ndarray of shape (n_in,)
             Derivative with respect to self.weights at point self.weights
+
         """
-        raise NotImplementedError()
+
+        X, y = "", ""
+        for key, val in kwargs.items():
+            if key == 'X':
+                X = val
+            elif key == 'y':
+                y = val
+
+        return self.fidelity_module_.compute_jacobian(X=X, y=y) + \
+               self.lam_ * self.regularization_module_.compute_jacobian(X=X,
+                                                                        y=y)
 
     @property
     def weights(self):
@@ -236,7 +271,7 @@ class RegularizedModule(BaseModule):
         -------
         weights: ndarray of shape (n_in, n_out)
         """
-        raise NotImplementedError()
+        return self.weights
 
     @weights.setter
     def weights(self, weights: np.ndarray) -> None:
@@ -251,4 +286,8 @@ class RegularizedModule(BaseModule):
         weights: ndarray of shape (n_in, n_out)
             Weights to set for module
         """
-        raise NotImplementedError()
+        self.weights = weights
+        self.fidelity_module_ = weights
+        self.regularization_module_.weights = weights
+        if self.include_intercept_:
+            self.regularization_module_.weights = weights[1:]

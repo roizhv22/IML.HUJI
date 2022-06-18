@@ -46,18 +46,22 @@ def plot_descent_path(module: Type[BaseModule],
     fig = plot_descent_path(IMLearn.desent_methods.modules.L1, np.ndarray([[1,1],[0,0]]))
     fig.show()
     """
+
     def predict_(w):
         return np.array([module(weights=wi).compute_output() for wi in w])
 
     from utils import decision_surface
-    return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange, density=70, showscale=False),
-                      go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines", marker_color="black")],
+    return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange,
+                                       density=70, showscale=False),
+                      go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1],
+                                 mode="markers+lines", marker_color="black")],
                      layout=go.Layout(xaxis=dict(range=xrange),
                                       yaxis=dict(range=yrange),
                                       title=f"GD Descent Path {title}"))
 
 
-def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarray], List[np.ndarray]]:
+def get_gd_state_recorder_callback() -> Tuple[
+    Callable[[], None], List[np.ndarray], List[np.ndarray]]:
     """
     Callback generator for the GradientDescent class, recording the objective's value and parameters at each iteration
 
@@ -76,6 +80,7 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
 
     res_weights = []
     res_values = []
+
     def callback(output, weights, grad, t, eta):
         res_weights.append(weights)
         res_values.append(output)
@@ -83,17 +88,15 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     return callback, res_values, res_weights
 
 
-
-def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
-                                 etas: Tuple[float] = (1, .1, .01, .001)):
-
-
+def compare_fixed_learning_rates(
+        init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
+        etas: Tuple[float] = (1, .1, .01, .001)):
     for model in [L1, L2]:
         cb_l1, values_l1, weights_l1 = get_gd_state_recorder_callback()
         gd_l1 = GradientDescent(FixedLR(.01), callback=cb_l1)
         gd_l1.fit(model(init), X=None, y=None)
         f1 = plot_descent_path(model, np.array(weights_l1), f"decent path for "
-                                    f"{model.__name__} module with eta={0.01}")
+                                                            f"{model.__name__} module with eta={0.01}")
         f1.write_image(f"ex6/Q1/GD_{model.__name__}.jpeg")
 
         for eta in etas:
@@ -101,9 +104,11 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
             gd_l1 = GradientDescent(FixedLR(eta), callback=cb_l1)
             gd_l1.fit(model(init), X=None, y=None)
             cov_plot = go.Figure(data=
-                [go.Scatter(x=[i for i in range(len(values_l1))], y=values_l1,
-                    mode="markers+lines",
-                            name="convergence rate")])
+                                 [go.Scatter(
+                                     x=[i for i in range(len(values_l1))],
+                                     y=values_l1,
+                                     mode="markers+lines",
+                                     name="convergence rate")])
             cov_plot.update_layout(title=f"EX3 with eta={eta}",
                                    xaxis_title="GD iteration"
                                    , yaxis_title="norm value")
@@ -112,10 +117,10 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
                   f"{np.min(values_l1)}")
 
 
-
-def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
-                                    eta: float = .1,
-                                    gammas: Tuple[float] = (.9, .95, .99, 1)):
+def compare_exponential_decay_rates(
+        init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
+        eta: float = .1,
+        gammas: Tuple[float] = (.9, .95, .99, 1)):
     # Optimize the L1 objective using different decay-rate values
     # of the exponentially decaying learning rate
     values_per_gamma = []
@@ -132,11 +137,11 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
             min_gamma = gamma
     iters = len(values_per_gamma[0])
     conv_fig = go.Figure(data=[go.Scatter(x=[i for i in range(iters)], y=value,
-                         name=f"CR with gamma = {gammas[j]}",
-                         mode="markers+lines")
-                         for j, value in enumerate(values_per_gamma)])
-    conv_fig.update_layout(title="EX5",xaxis_title="GD iteration",
-                         yaxis_title="norm value")
+                                          name=f"CR with gamma = {gammas[j]}",
+                                          mode="markers+lines")
+                               for j, value in enumerate(values_per_gamma)])
+    conv_fig.update_layout(title="EX5", xaxis_title="GD iteration",
+                           yaxis_title="norm value")
     conv_fig.write_image("ex6/Q5/cov_rate.jpeg")
     print(f"min of l_1 for all decay rates is {min_of_l1} "
           f"for gamma {min_gamma}")
@@ -147,13 +152,15 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
         gd_l1 = GradientDescent(learning_rate=ExponentialLR(eta, 0.95),
                                 callback=cb_l1)
         gd_l1.fit(module(init), X=None, y=None)
-        f1 = plot_descent_path(module, np.array(weights_l1), f"decent path for "
-                                    f"{module.__name__} module with eta={0.1}"
-                                                             f", gamma = 0.95")
+        f1 = plot_descent_path(module, np.array(weights_l1),
+                               f"decent path for "
+                               f"{module.__name__} module with eta={0.1}"
+                               f", gamma = 0.95")
         f1.write_image(f"ex6/Q7/GD_{module.__name__}_gamma_0.95.jpeg")
 
 
-def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8) -> \
+def load_data(path: str = "../datasets/SAheart.data",
+              train_portion: float = .8) -> \
         Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """
     Load South-Africa Heart Disease dataset and randomly split into a train- and test portion
@@ -182,7 +189,8 @@ def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8)
     """
     df = pd.read_csv(path)
     df.famhist = (df.famhist == 'Present').astype(int)
-    return split_train_test(df.drop(['chd', 'row.names'], axis=1), df.chd, train_portion)
+    return split_train_test(df.drop(['chd', 'row.names'], axis=1), df.chd,
+                            train_portion)
 
 
 def fit_logistic_regression():
@@ -190,7 +198,29 @@ def fit_logistic_regression():
     X_train, y_train, X_test, y_test = load_data()
 
     # Plotting convergence rate of logistic regression over SA heart disease data
-    raise NotImplementedError()
+
+    log_reg = LogisticRegression()
+    log_reg.fit(X_train.to_numpy(), y_train.to_numpy())
+    print("fitted")
+    from sklearn.metrics import roc_curve, auc
+    fpr, tpr, thresholds = roc_curve(y_test.to_numpy(),
+                                     log_reg.predict_proba(X_test.to_numpy()))
+    # print(auc(fpr, tpr))
+    roc = go.Figure(
+        data=[go.Scatter(x=[0, 1], y=[0, 1], mode="lines",
+                         line=dict(color="black", dash='dash'),
+                         name="Random Class Assignment"),
+              go.Scatter(x=fpr, y=tpr, mode='markers+lines', text=thresholds,
+                         name="", showlegend=False, marker_size=5,
+                         hovertemplate="<b>Threshold:</b>%{text:.3f}<br>FPR:"
+                                       " %{x:.3f}<br>TPR: %{y:.3f}")],
+        layout=go.Layout(
+            title=rf"$\text{{ROC Curve Of Fitted Model - AUC}}="
+                  rf"{auc(fpr, tpr):.6f}$",
+            xaxis=dict(title=r"$\text{False Positive Rate (FPR)}$"),
+            yaxis=dict(title=r"$\text{True Positive Rate (TPR)}$")))
+    roc.show()
+
 
     # Fitting l1- and l2-regularized logistic regression models, using cross-validation to specify values
     # of regularization parameter
@@ -200,5 +230,5 @@ def fit_logistic_regression():
 if __name__ == '__main__':
     np.random.seed(0)
     # compare_fixed_learning_rates()
-    compare_exponential_decay_rates()
-    # fit_logistic_regression()
+    # compare_exponential_decay_rates()
+    fit_logistic_regression()

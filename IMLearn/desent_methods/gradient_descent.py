@@ -43,7 +43,7 @@ class GradientDescent:
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
-                 max_iter: int = 1000,
+                 max_iter: int = 2000,
                  out_type: str = "last",
                  callback: Callable[
                      [GradientDescent, ...], None] = default_callback):
@@ -127,12 +127,13 @@ class GradientDescent:
         delta = np.inf
         while i < self.max_iter_ and delta > self.tol_:
             grad_dir = -1.0 * f.compute_jacobian(X=X, y=y)
-            n = self.learning_rate_.lr_step(i)
+            n = self.learning_rate_.lr_step(t=i)
             old_w = f.weights
             f.weights = f.weights + n * grad_dir
             delta = np.abs(np.linalg.norm(f.weights - old_w, ord=2))
-            self.callback_(f.compute_output(X=X, y=y), f.weights,
-                           f.compute_jacobian(X=X, y=y), i, n)
+            if self.callback_ is not None:
+                self.callback_(value=f.compute_output(X=X, y=y),weights= f.weights,
+                               jacobian=f.compute_jacobian(X=X, y=y), t=i, eta=n)
             i += 1
             steps.append(old_w)
             values.append(f.compute_output(X=X, y=y))
