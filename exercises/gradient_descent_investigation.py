@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Type
 
+import tqdm
+
 from IMLearn import BaseModule
 from IMLearn.desent_methods import GradientDescent, FixedLR, ExponentialLR
 from IMLearn.desent_methods.modules import L1, L2
@@ -104,11 +106,11 @@ def compare_fixed_learning_rates(
             gd_l1 = GradientDescent(FixedLR(eta), callback=cb_l1)
             gd_l1.fit(model(init), X=None, y=None)
             cov_plot = go.Figure(data=
-                                 [go.Scatter(
-                                     x=[i for i in range(len(values_l1))],
-                                     y=values_l1,
-                                     mode="markers+lines",
-                                     name="convergence rate")])
+            [go.Scatter(
+                x=[i for i in range(len(values_l1))],
+                y=values_l1,
+                mode="markers+lines",
+                name="convergence rate")])
             cov_plot.update_layout(title=f"EX3 with eta={eta}",
                                    xaxis_title="GD iteration"
                                    , yaxis_title="norm value")
@@ -199,13 +201,14 @@ def fit_logistic_regression():
 
     # Plotting convergence rate of logistic regression over SA heart disease data
 
-    log_reg = LogisticRegression()
+    log_reg = LogisticRegression(solver=GradientDescent(
+        learning_rate=FixedLR(1e-4), max_iter=20000))
     log_reg.fit(X_train.to_numpy(), y_train.to_numpy())
     print("fitted")
     from sklearn.metrics import roc_curve, auc
-    fpr, tpr, thresholds = roc_curve(y_test.to_numpy(),
-                                     log_reg.predict_proba(X_test.to_numpy()))
-    # print(auc(fpr, tpr))
+    fpr, tpr, thresholds = roc_curve(y_train.to_numpy(),
+                                     log_reg.predict_proba(X_train.to_numpy()),
+                                     drop_intermediate=True)
     roc = go.Figure(
         data=[go.Scatter(x=[0, 1], y=[0, 1], mode="lines",
                          line=dict(color="black", dash='dash'),
@@ -219,12 +222,48 @@ def fit_logistic_regression():
                   rf"{auc(fpr, tpr):.6f}$",
             xaxis=dict(title=r"$\text{False Positive Rate (FPR)}$"),
             yaxis=dict(title=r"$\text{True Positive Rate (TPR)}$")))
-    roc.show()
+    roc.write_image(f"ex6/Q9/ROC.jpeg")
+    alpha_star = thresholds[np.argmax((tpr - fpr))]
+    print(alpha_star)
+    log_alpha_star = LogisticRegression(alpha=alpha_star)
+    log_alpha_star.fit(X_train.to_numpy(), y_train.to_numpy())
+    print(log_alpha_star.loss(X_test.to_numpy(), y_test.to_numpy()))
+    # lose on model
 
-
-    # Fitting l1- and l2-regularized logistic regression models, using cross-validation to specify values
+    # Fitting l1- and l2-regularized logistic regression models,
+    # using cross-validation to specify values
     # of regularization parameter
-    raise NotImplementedError()
+    from IMLearn.metrics.loss_functions import misclassification_error
+    from IMLearn.model_selection import cross_validate
+
+    for pen in ["l1", "l2"]:
+        lams = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1]
+        validates = []
+        for lam in tqdm.tqdm(lams):
+            reg = LogisticRegression(lam=lam, penalty=pen, alpha=0.5,
+                                     solver=GradientDescent(
+                                         learning_rate=FixedLR(1e-4),
+                                         max_iter=20000))
+            tr, val = cross_validate(reg, X_train.to_numpy(),
+                                     y_train.to_numpy(),
+                                     misclassification_error)
+            validates.append(val)
+        best = lams[np.argmin(validates)]
+        fig1 = go.Figure(
+            [go.Scatter(x=lams, y=validates, mode="markers+lines",
+                           name="Validation score")]
+            , layout=go.Layout(title=f"CV for Lambda for {pen}",
+                               xaxis_title="Lambda",
+                               yaxis_title="Error"))
+        fig1.write_image(f"ex6/Q10/pick_lam_{pen}.jpeg")
+        print(f"best Lmabda for L1 is {best}")
+        mod = LogisticRegression(lam=best, penalty=pen, alpha=0.5,
+                                     solver=GradientDescent(
+                                         learning_rate=FixedLR(1e-4),
+                                         max_iter=20000))
+        mod.fit(X_train.to_numpy(), y_train.to_numpy())
+        print(f"model error on this lambda is "
+              f"{mod.loss(X_test.to_numpy(),y_test.to_numpy())}")
 
 
 if __name__ == '__main__':

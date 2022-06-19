@@ -43,7 +43,7 @@ class GradientDescent:
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
-                 max_iter: int = 2000,
+                 max_iter: int = 1000,
                  out_type: str = "last",
                  callback: Callable[
                      [GradientDescent, ...], None] = default_callback):

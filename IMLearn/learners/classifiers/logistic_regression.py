@@ -92,7 +92,7 @@ class LogisticRegression(BaseEstimator):
         """
         d = len(X[0])
         starting_w = np.random.normal(0, 1, size=(d,)) * (1 / np.sqrt(d))
-        module = LogisticModule(starting_w)
+
         if self.penalty_ == "l1":
             module = RegularizedModule(LogisticModule(starting_w),
                                        L1(starting_w), self.lam_,
@@ -101,7 +101,9 @@ class LogisticRegression(BaseEstimator):
             module = RegularizedModule(LogisticModule(starting_w),
                                        L2(starting_w), self.lam_,
                                        starting_w, self.include_intercept_)
-        self.solver_.out_type_ = "best"
+        else:
+            module = LogisticModule(starting_w)
+        # self.solver_.out_type_ = "best"
         self.coefs_ = self.solver_.fit(module, X, y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -119,7 +121,7 @@ class LogisticRegression(BaseEstimator):
             Predicted responses of given samples
         """
         pred = X @ self.coefs_
-        return np.where(pred > self.alpha_, 1, 0)
+        return np.where(pred >= self.alpha_, 1, 0)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
@@ -137,7 +139,7 @@ class LogisticRegression(BaseEstimator):
             according to the fitted model
         """
         pred = X @ self.coefs_
-        sigmoid = lambda x: 1 / (1 + np.exp(-x))
+        sigmoid = lambda x: 1.0 / (1.0 + np.exp(-x))
         return np.apply_along_axis(sigmoid, 0, pred)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
